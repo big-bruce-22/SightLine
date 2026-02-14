@@ -1,0 +1,30 @@
+.root {
+    -fx-background-color: #444444;
+    -fx-font-size: 40px;
+}
+
+.root #actions-hbox {
+    -fx-alignment: center-left;
+    -fx-padding: 0px 0px 0px 100px;
+    -fx-spacing: 20px;
+}
+
+.root #action-button {
+    -fx-pref-width: 200px;
+}
+
+.root #input-combo-box .caret {
+    -fx-scale-x: 3;
+    -fx-scale-y: 3;
+}
+
+.root #input-hbox {
+    -fx-alignment: center-right;
+    -fx-spacing: 20px;
+}
+
+.root #progress-label {
+    -fx-pref-width: 350px;    
+    -fx-font-size: 40px;
+    -fx-text-fill: white;
+}

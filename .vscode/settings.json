@@ -1,0 +1,16 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.dependency.packagePresentation": "hierarchical",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "search.exclude": {
+        "target": true
+    },
+    "files.exclude": {
+        "target": true
+    },
+    "files.watcherExclude": {
+        "target": true
+    },
+    "java.project.explorer.showNonJavaResources": true,
+    "java.debug.settings.onBuildFailureProceed": true
+}
