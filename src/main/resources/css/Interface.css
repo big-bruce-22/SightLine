@@ -24,7 +24,11 @@
 }
 
 .root #progress-label {
-    -fx-pref-width: 350px;    
+    -fx-pref-width: 400px;    
     -fx-font-size: 40px;
     -fx-text-fill: white;
+}
+
+.root #scroll-pane {
+    -fx-font-size: 50px;
 }

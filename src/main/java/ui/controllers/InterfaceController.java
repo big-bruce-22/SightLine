@@ -15,6 +15,13 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.vosk.Recognizer;
 
+import ai.speechtotext.transcription.Transcriber;
+import ai.speechtotext.transcription.LineTranscription;
+import ai.speechtotext.transcription.TranscriptionChannel;
+import ai.speechtotext.vosk.Models;
+
+import environment.Configuration;
+
 import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXComboBox;
 import io.github.palexdev.materialfx.controls.MFXScrollPane;
@@ -32,19 +39,14 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import lombok.RequiredArgsConstructor;
-
-import stt.transcription.Transcriber;
-import stt.transcription.Transcription;
-import stt.transcription.TranscriptionChannel;
-import stt.vosk.Models;
 import ui.controllers.Builder.DialogType;
 
-@RequiredArgsConstructor
 public class InterfaceController implements Initializable {
 
     private final Stage stage;
@@ -71,11 +73,25 @@ public class InterfaceController implements Initializable {
 
     private Timeline dotsTimeline;
 
-    private final int sampleRate = 16000;
-    private final AudioFormat format = new AudioFormat(sampleRate, 16, 1, true, false);
-    private final DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+    private final int sampleRate;
+    private final AudioFormat format;
+    private final DataLine.Info info;
+    private TargetDataLine microphone;
 
-    private TranscriptionChannel<Transcription> transcriptionChannel = new TranscriptionChannel<>();
+    private TranscriptionChannel<LineTranscription> transcriptionChannel = new TranscriptionChannel<>();
+
+    public InterfaceController(Stage stage) {
+        this.stage = stage;
+
+        sampleRate = 16000;
+        format = new AudioFormat(sampleRate, 16, 1, true, false);
+        info = new DataLine.Info(TargetDataLine.class, format);
+        try {
+            microphone = (TargetDataLine) AudioSystem.getLine(info);
+        } catch (LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) {
@@ -89,7 +105,7 @@ public class InterfaceController implements Initializable {
         stopButton.setOnAction(this::stopAction);
 
         transcriptionChannel.subscribe(t -> {
-            if (t == Transcription.END) {
+            if (t == LineTranscription.END) {
                 dotsTimeline.stop();
 
                 Platform.runLater(() -> {
@@ -110,10 +126,12 @@ public class InterfaceController implements Initializable {
             }
 
             Platform.runLater(() -> {
-                textVbox.getChildren().add(new Text(t.text()));
+                TextFlow flow = new TextFlow();
+                flow.getChildren().add(new Text(t.text()));
+                textVbox.getChildren().add(flow);
+                
+                viewScrollPane.setVvalue(1); // auto scroll to bottom
             });
-
-            viewScrollPane.setVvalue(Double.MAX_VALUE); // auto scroll to bottom
         });
 
         startButton.setDisable(true);
@@ -131,6 +149,12 @@ public class InterfaceController implements Initializable {
             new KeyFrame(Duration.seconds(1.5), e -> progressLabel.setText("Stopped"))
         );
 
+        dotsTimeline.setOnFinished(_ -> {
+            inputComboBox.setDisable(false);
+            inputComboBox.clearSelection();
+            inputComboBox.setText("Select Input");
+        });
+
         dotsTimeline.play();
 
         this.dotsTimeline.stop();
@@ -141,10 +165,6 @@ public class InterfaceController implements Initializable {
         startButton.setDisable(true);
         pauseResumeButton.setDisable(true);
         stopButton.setDisable(true);
-
-        inputComboBox.setDisable(false);
-        inputComboBox.clearSelection();
-        inputComboBox.setText("Select Input");
     }
 
     private void pauseResumeAction(ActionEvent event) {
@@ -153,13 +173,18 @@ public class InterfaceController implements Initializable {
         if (pauseResumeButton.getText().equals("Pause")) {
             transcriber.pause();
             pauseResumeButton.setText("Resume");
+            progressLabel.setText("Paused");
+            dotsTimeline.stop();
         } else {
             transcriber.resume();
             pauseResumeButton.setText("Pause");
+            dotsTimeline.play();
         }
     }
 
     private void startAction(ActionEvent event) {
+        textVbox.getChildren().clear();
+
         dotsTimeline = new Timeline(
             new KeyFrame(Duration.seconds(0.0), e -> progressLabel.setText("Transcribing")),
             new KeyFrame(Duration.seconds(0.5), e -> progressLabel.setText("Transcribing.")),
@@ -180,14 +205,42 @@ public class InterfaceController implements Initializable {
                     pauseResumeButton.setDisable(false);
                     stopButton.setDisable(false);
 
-                    transcriber.transcribe(transcriptionChannel, true);
+                    File sessionsFolder = new File(Configuration.sessionsSavePath);
+
+                    if (!sessionsFolder.exists()) {
+                        sessionsFolder.mkdirs();
+                    }
+
+                    File currentSessionFolder = new File(sessionsFolder, "session_" + System.currentTimeMillis());
+
+                    if (!currentSessionFolder.exists()) {
+                        currentSessionFolder.mkdirs();
+                    }
+
+                    File sessionTranscriptionFile = new File(currentSessionFolder, "transcription.txt");
+
+                    transcriber.transcribe(sessionTranscriptionFile, transcriptionChannel, true);
                 }
                 case "Audio File" -> {
                     startButton.setDisable(true);
                     pauseResumeButton.setDisable(false);
                     stopButton.setDisable(false);
 
-                    transcriber.transcribe(transcriptionChannel, false);
+                    File sessionsFolder = new File(Configuration.sessionsSavePath);
+
+                    if (!sessionsFolder.exists()) {
+                        sessionsFolder.mkdirs();
+                    }
+
+                    File currentSessionFolder = new File(sessionsFolder, "session_" + System.currentTimeMillis());
+
+                    if (!currentSessionFolder.exists()) {
+                        currentSessionFolder.mkdirs();
+                    }
+
+                    File sessionTranscriptionFile = new File(currentSessionFolder, "transcription.txt");
+
+                    transcriber.transcribe(sessionTranscriptionFile, transcriptionChannel, false);
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + inputComboBox.getValue());
             }
@@ -210,7 +263,11 @@ public class InterfaceController implements Initializable {
             protected Void call() {
                 try {
                     var recognizer = new Recognizer(Models.tl, sampleRate);
-                    var microphone = (TargetDataLine) AudioSystem.getLine(info);
+                    if (!microphone.isOpen()) {
+                        microphone.open(format);
+                    }
+                    
+                    microphone.start();
                     transcriber = new Transcriber(recognizer, microphone, null);
                 } catch (IOException | LineUnavailableException e) {
                     e.printStackTrace();
@@ -227,8 +284,8 @@ public class InterfaceController implements Initializable {
         if (file == null) {
             Builder.newDialog(stage, rootPane, "Select a .wav file!", DialogType.ERROR, null)
                 .showAndWait();
-            
-            inputComboBox.getSelectionModel().clearSelection();
+            inputComboBox.clearSelection();
+            inputComboBox.setText("Select Input");
             return;
         }
 
@@ -253,6 +310,8 @@ public class InterfaceController implements Initializable {
     }
 
     private void playLoadingAnimation(Task<Void> loadTask) {
+        inputComboBox.setDisable(true);
+
         Timeline dotsTimeline = new Timeline(
             new KeyFrame(Duration.seconds(0.0), e -> progressLabel.setText("Loading")),
             new KeyFrame(Duration.seconds(0.5), e -> progressLabel.setText("Loading.")),
@@ -267,12 +326,14 @@ public class InterfaceController implements Initializable {
             dotsTimeline.stop();
             progressLabel.setText("Ready");
             startButton.setDisable(false);
+            inputComboBox.setDisable(false);
         });
 
         loadTask.setOnFailed(e -> {
             dotsTimeline.stop();
             progressLabel.setText("Failed to load");
             startButton.setDisable(true);
+            inputComboBox.setDisable(false);
         });
 
         new Thread(loadTask).start();
@@ -281,12 +342,12 @@ public class InterfaceController implements Initializable {
     private File chooseAudioFile() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select .wav file to be opened");
-        fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("WAV files (*.wav)", "*.wav")
+        fileChooser.getExtensionFilters().add(new ExtensionFilter("WAV files (*.wav)", "*.wav"));
+        fileChooser.setInitialDirectory(
+            System.getProperty("user.home") != null
+                ? new File(System.getProperty("user.home"))
+                : new File(".")
         );
-        fileChooser.setInitialDirectory(System.getProperty("user.home") != null
-            ? new File(System.getProperty("user.home"))
-            : new File("."));
         return fileChooser.showOpenDialog(stage);
     }
 }

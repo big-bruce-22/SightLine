@@ -1,4 +1,4 @@
-package stt.transcription;
+package ai.speechtotext.transcription;
 
 import java.util.ArrayList;
 import java.util.List;

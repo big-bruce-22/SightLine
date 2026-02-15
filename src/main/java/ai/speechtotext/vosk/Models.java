@@ -1,4 +1,4 @@
-package stt.vosk;
+package ai.speechtotext.vosk;
 
 import java.io.IOException;
 

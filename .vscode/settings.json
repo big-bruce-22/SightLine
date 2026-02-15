@@ -3,13 +3,16 @@
     "java.dependency.packagePresentation": "hierarchical",
     "java.compile.nullAnalysis.mode": "automatic",
     "search.exclude": {
-        "target": true
+        "target": true,
+        "models": true
     },
     "files.exclude": {
-        "target": true
+        "target": true,
+        "models": true
     },
     "files.watcherExclude": {
-        "target": true
+        "target": true,
+        "models": true
     },
     "java.project.explorer.showNonJavaResources": true,
     "java.debug.settings.onBuildFailureProceed": true
