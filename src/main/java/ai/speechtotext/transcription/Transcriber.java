@@ -99,7 +99,6 @@ public class Transcriber {
                         writer.write(transcription.toString());
                         writer.newLine();
                         
-
                         audioPositionSeconds += durationSeconds;
                     }
                 } else {

@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import ui.controllers.InterfaceController;
+import ui.controllers.TranscriptionHistoryController;
 
 public class Main extends Application {
     public static void main(String[] args) {
@@ -33,5 +34,18 @@ public class Main extends Application {
 
 		stage.setTitle("Live Captioning System");
 		stage.show();
+
+		Stage transcriptionHistoryStage = new Stage();
+
+		FXMLLoader transcriptionHistoryLoader = new FXMLLoader(Main.class.getResource("/fxml/TranscriptionHistory.fxml"));
+		transcriptionHistoryLoader.setControllerFactory(_ -> new TranscriptionHistoryController());
+
+		transcriptionHistoryStage.setScene(new Scene(transcriptionHistoryLoader.load()));
+		transcriptionHistoryStage.setResizable(false);
+
+		transcriptionHistoryStage.setOnCloseRequest(_ -> System.exit(0));
+
+		transcriptionHistoryStage.setTitle("Transcription History");
+		transcriptionHistoryStage.show();
     }    
 }

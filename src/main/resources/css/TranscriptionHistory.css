@@ -1,0 +1,70 @@
+.root {
+    -fx-background-color: linear-gradient(to bottom, #a9bfe8, #1a55c3);
+}
+
+.root .sessions-list-view {
+    -fx-background-color: linear-gradient(to bottom, #a9bfe8, #1a55c3);
+    -fx-font-size: 35px;
+}
+.root .sessions-list-view #prompt-label {
+    -fx-text-fill: black;
+}
+
+.root .sessions-list-view #scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.root .sessions-list-view #sessions-vbox {
+    -fx-alignment: top-center;
+    -fx-spacing: 20px;
+}
+
+.root .sessions-list-view #session-button {
+    -fx-font-size: 30px;
+}
+
+.root .transcription-panel {
+    -fx-background-color: linear-gradient(to bottom, #a9bfe8, #1a55c3);
+}
+
+.root .transcription-panel #session-name-label{
+    -fx-font-size: 35px;
+}
+
+.root .transcription-panel #transcription-text-area {
+    -fx-control-inner-background: transparent;
+    -fx-text-fill: black;
+    -fx-wrap-text: true;
+    -fx-font-size: 30px;
+    -fx-editable: false;
+}
+
+.root .transcription-panel #transcription-text-area .content {
+    -fx-background-color: -fx-control-inner-background;
+}
+
+.root .transcription-panel #transcription-text-area .vbar {
+    -fx-pref-width: 10px;
+}
+
+/* .root .transcription-panel #transcription-text-area .scroll-pane {
+    -fx-hbar-policy: never;
+    -fx-vbar-policy: never;
+} */
+
+.root .transcription-panel #transcription-text-area .scroll-bar {
+    -fx-pref-width: 20px;
+}
+
+.root .transcription-panel #transcription-text-area .increment-arrow, .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-min-width: 0px;
+    -fx-min-height: 0px;
+    -fx-pref-width: 0px;
+    -fx-pref-height: 0px;
+    -fx-opacity: 0;
+}
+
+.root .transcription-panel #back-button {
+    -fx-font-size: 30px;
+}

@@ -3,6 +3,8 @@ package ui.controllers;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 import javax.sound.sampled.AudioFormat;
@@ -117,10 +119,9 @@ public class InterfaceController implements Initializable {
 
                     if (debugMode) {
                         method = null;
+                        transcriber = null;
                     }
 
-                    transcriber = null;
-    
                     startButton.setDisable(false);
                     pauseResumeButton.setDisable(true);
                     stopButton.setDisable(true);
@@ -166,6 +167,10 @@ public class InterfaceController implements Initializable {
     }
 
     private void stopAction(ActionEvent event) {
+        startButton.setDisable(false);
+        pauseResumeButton.setDisable(true);
+        stopButton.setDisable(true);
+
         if (transcriber == null) return;
 
         Timeline dotsTimeline = new Timeline(
@@ -184,10 +189,6 @@ public class InterfaceController implements Initializable {
         if (debugMode) {
             transcriber = null;
         } 
-        
-        startButton.setDisable(false);
-        pauseResumeButton.setDisable(true);
-        stopButton.setDisable(true);
     }
 
     private void pauseResumeAction(ActionEvent event) {
@@ -243,6 +244,8 @@ public class InterfaceController implements Initializable {
         dotsTimeline.play();
 
         new Thread(() -> {
+            String sessionName = "session_" + 
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
             switch (method) {
                 case MICROPHONE -> {
                     startButton.setDisable(true);
@@ -255,7 +258,7 @@ public class InterfaceController implements Initializable {
                         sessionsFolder.mkdirs();
                     }
 
-                    File currentSessionFolder = new File(sessionsFolder, "session_" + System.currentTimeMillis());
+                    File currentSessionFolder = new File(sessionsFolder, sessionName);
 
                     if (!currentSessionFolder.exists()) {
                         currentSessionFolder.mkdirs();
@@ -276,7 +279,7 @@ public class InterfaceController implements Initializable {
                         sessionsFolder.mkdirs();
                     }
 
-                    File currentSessionFolder = new File(sessionsFolder, "session_" + System.currentTimeMillis());
+                    File currentSessionFolder = new File(sessionsFolder, sessionName);
 
                     if (!currentSessionFolder.exists()) {
                         currentSessionFolder.mkdirs();
