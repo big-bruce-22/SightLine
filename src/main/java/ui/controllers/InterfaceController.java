@@ -23,23 +23,20 @@ import ai.speechtotext.vosk.Models;
 import environment.Configuration;
 
 import io.github.palexdev.materialfx.controls.MFXButton;
-import io.github.palexdev.materialfx.controls.MFXComboBox;
-import io.github.palexdev.materialfx.controls.MFXScrollPane;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
@@ -48,6 +45,10 @@ import javafx.util.Duration;
 import ui.controllers.Builder.DialogType;
 
 public class InterfaceController implements Initializable {
+
+    static enum InputMethod {
+        MICROPHONE, AUDIO_FILE
+    }
 
     private final Stage stage;
 
@@ -58,20 +59,17 @@ public class InterfaceController implements Initializable {
     private MFXButton startButton, pauseResumeButton, stopButton;
 
     @FXML
-    private MFXComboBox<String> inputComboBox;
-
-    @FXML
     private Label progressLabel;
 
     @FXML
-    private VBox textVbox;
+    private MFXButton upButton, downButton;
 
     @FXML
-    private MFXScrollPane viewScrollPane;
-
-    private Transcriber transcriber;
+    private TextArea textArea;
 
     private Timeline dotsTimeline;
+    
+    private Transcriber transcriber;
 
     private final int sampleRate;
     private final AudioFormat format;
@@ -79,6 +77,10 @@ public class InterfaceController implements Initializable {
     private TargetDataLine microphone;
 
     private TranscriptionChannel<LineTranscription> transcriptionChannel = new TranscriptionChannel<>();
+
+    private InputMethod method = InputMethod.AUDIO_FILE;
+
+    private final boolean debugMode = true;
 
     public InterfaceController(Stage stage) {
         this.stage = stage;
@@ -95,48 +97,72 @@ public class InterfaceController implements Initializable {
 
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) {
-        Commons.setClicableComboBox(inputComboBox);
-
-        inputComboBox.getItems().addAll("Microphone", "Audio File");
-        inputComboBox.valueProperty().addListener(inputMethodChanged());
+        upButton.setOnAction(this::handleUpButton);
+        downButton.setOnAction(this::handleDownButton);
 
         startButton.setOnAction(this::startAction);
         pauseResumeButton.setOnAction(this::pauseResumeAction);
         stopButton.setOnAction(this::stopAction);
+
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setFocusTraversable(false);
 
         transcriptionChannel.subscribe(t -> {
             if (t == LineTranscription.END) {
                 dotsTimeline.stop();
 
                 Platform.runLater(() -> {
-                    progressLabel.setText("Transcription ended");
+                    progressLabel.setText("Done Transcribing");
+
+                    if (debugMode) {
+                        method = null;
+                    }
 
                     transcriber = null;
     
-                    startButton.setDisable(true);
+                    startButton.setDisable(false);
                     pauseResumeButton.setDisable(true);
                     stopButton.setDisable(true);
-    
-                    inputComboBox.setDisable(false);
-                    inputComboBox.clearSelection();
-                    inputComboBox.setText("Select Input");
                 });
             
                 return;
             }
-
+            
             Platform.runLater(() -> {
-                TextFlow flow = new TextFlow();
-                flow.getChildren().add(new Text(t.text()));
-                textVbox.getChildren().add(flow);
-                
-                viewScrollPane.setVvalue(1); // auto scroll to bottom
+                if (textArea.getText().isEmpty()) {
+                    textArea.appendText(t.text());
+                } else {
+                    textArea.appendText("\n" + t.text());
+                }
             });
         });
 
         startButton.setDisable(true);
         pauseResumeButton.setDisable(true);
         stopButton.setDisable(true);
+
+        setInputMethod(method);
+    }
+
+    private void handleUpButton(ActionEvent event) {
+        textArea.fireEvent(new KeyEvent(
+            KeyEvent.KEY_PRESSED,
+            "",
+            "",
+            KeyCode.UP,
+            false, false, false, false
+        ));
+    }
+
+    private void handleDownButton(ActionEvent event) {
+        textArea.fireEvent(new KeyEvent(
+            KeyEvent.KEY_PRESSED,
+            "",
+            "",
+            KeyCode.DOWN,
+            false, false, false, false
+        ));
     }
 
     private void stopAction(ActionEvent event) {
@@ -149,20 +175,17 @@ public class InterfaceController implements Initializable {
             new KeyFrame(Duration.seconds(1.5), e -> progressLabel.setText("Stopped"))
         );
 
-        dotsTimeline.setOnFinished(_ -> {
-            inputComboBox.setDisable(false);
-            inputComboBox.clearSelection();
-            inputComboBox.setText("Select Input");
-        });
-
         dotsTimeline.play();
 
         this.dotsTimeline.stop();
 
         transcriber.stop();
-        transcriber = null;
 
-        startButton.setDisable(true);
+        if (debugMode) {
+            transcriber = null;
+        } 
+        
+        startButton.setDisable(false);
         pauseResumeButton.setDisable(true);
         stopButton.setDisable(true);
     }
@@ -183,24 +206,45 @@ public class InterfaceController implements Initializable {
     }
 
     private void startAction(ActionEvent event) {
-        textVbox.getChildren().clear();
+        if (method == null && debugMode) {
+            int[] pressed = new int[1];
+            Builder.newChoiceDialog(
+                stage,
+                rootPane,
+                "Input method", 
+                "Input method", 
+                "Select input method", 
+                null, 
+                new String[] {"Microphone", "Audio File"}, 
+                pressed, 
+                null
+            ).showAndWait();
+
+            method = switch (pressed[0]) {
+                case 0 -> InputMethod.MICROPHONE;
+                case 1 -> InputMethod.AUDIO_FILE;
+                default -> null;
+            };
+
+            setInputMethod(method);
+
+            startButton.setDisable(true);
+        }
 
         dotsTimeline = new Timeline(
-            new KeyFrame(Duration.seconds(0.0), e -> progressLabel.setText("Transcribing")),
-            new KeyFrame(Duration.seconds(0.5), e -> progressLabel.setText("Transcribing.")),
-            new KeyFrame(Duration.seconds(1.0), e -> progressLabel.setText("Transcribing..")),
-            new KeyFrame(Duration.seconds(1.5), e -> progressLabel.setText("Transcribing...")),
-            new KeyFrame(Duration.seconds(2.0), e -> progressLabel.setText("Transcribing..."))
+            new KeyFrame(Duration.seconds(0.0), _ -> progressLabel.setText("Transcribing")),
+            new KeyFrame(Duration.seconds(0.5), _ -> progressLabel.setText("Transcribing.")),
+            new KeyFrame(Duration.seconds(1.0), _ -> progressLabel.setText("Transcribing..")),
+            new KeyFrame(Duration.seconds(1.5), _ -> progressLabel.setText("Transcribing...")),
+            new KeyFrame(Duration.seconds(2.0), _ -> progressLabel.setText("Transcribing..."))
         );
 
         dotsTimeline.setCycleCount(Animation.INDEFINITE);
         dotsTimeline.play();
 
-        inputComboBox.setDisable(true);
-
         new Thread(() -> {
-            switch (inputComboBox.getValue()) {
-                case "Microphone" -> {
+            switch (method) {
+                case MICROPHONE -> {
                     startButton.setDisable(true);
                     pauseResumeButton.setDisable(false);
                     stopButton.setDisable(false);
@@ -221,7 +265,7 @@ public class InterfaceController implements Initializable {
 
                     transcriber.transcribe(sessionTranscriptionFile, transcriptionChannel, true);
                 }
-                case "Audio File" -> {
+                case AUDIO_FILE -> {
                     startButton.setDisable(true);
                     pauseResumeButton.setDisable(false);
                     stopButton.setDisable(false);
@@ -242,19 +286,17 @@ public class InterfaceController implements Initializable {
 
                     transcriber.transcribe(sessionTranscriptionFile, transcriptionChannel, false);
                 }
-                default -> throw new IllegalStateException("Unexpected value: " + inputComboBox.getValue());
             }
         }).start();
     }
 
-    private ChangeListener<? super String> inputMethodChanged() {
-        return (obs, oldVal, newVal) -> {
-            if (newVal == null) return;
-            switch (newVal) {
-                case "Microphone" -> handleMicrophoneInput();
-                case "Audio File" -> handleAudioFileInput();
-            }
-        };
+    private void setInputMethod(InputMethod method) {
+        System.out.println("Selected input method: " + method);
+        if (method == null) return;
+        switch (method) {
+            case MICROPHONE -> handleMicrophoneInput();
+            case AUDIO_FILE -> handleAudioFileInput();
+        }
     }
 
     private void handleMicrophoneInput() {
@@ -284,8 +326,6 @@ public class InterfaceController implements Initializable {
         if (file == null) {
             Builder.newDialog(stage, rootPane, "Select a .wav file!", DialogType.ERROR, null)
                 .showAndWait();
-            inputComboBox.clearSelection();
-            inputComboBox.setText("Select Input");
             return;
         }
 
@@ -310,8 +350,6 @@ public class InterfaceController implements Initializable {
     }
 
     private void playLoadingAnimation(Task<Void> loadTask) {
-        inputComboBox.setDisable(true);
-
         Timeline dotsTimeline = new Timeline(
             new KeyFrame(Duration.seconds(0.0), e -> progressLabel.setText("Loading")),
             new KeyFrame(Duration.seconds(0.5), e -> progressLabel.setText("Loading.")),
@@ -326,14 +364,12 @@ public class InterfaceController implements Initializable {
             dotsTimeline.stop();
             progressLabel.setText("Ready");
             startButton.setDisable(false);
-            inputComboBox.setDisable(false);
         });
 
         loadTask.setOnFailed(e -> {
             dotsTimeline.stop();
             progressLabel.setText("Failed to load");
             startButton.setDisable(true);
-            inputComboBox.setDisable(false);
         });
 
         new Thread(loadTask).start();

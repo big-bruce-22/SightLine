@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import io.github.palexdev.materialfx.controls.MFXButton?>
-<?import io.github.palexdev.materialfx.controls.MFXComboBox?>
-<?import io.github.palexdev.materialfx.controls.MFXScrollPane?>
-<?import io.github.palexdev.mfxcore.controls.Label?>
-<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<GridPane fx:id="rootPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1600.0" stylesheets="@../css/Interface.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers.InterfaceController">
+<GridPane fx:id="rootPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="1600.0" stylesheets="@../css/Interface.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers.InterfaceController">
   <columnConstraints>
-    <ColumnConstraints fillWidth="false" halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" percentWidth="50.0" prefWidth="100.0" />
-    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="50.0" prefWidth="100.0" />
+    <ColumnConstraints fillWidth="false" halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" percentWidth="40.0" prefWidth="100.0" />
+    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="21.0" prefWidth="100.0" />
   </columnConstraints>
   <rowConstraints>
     <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -23,34 +23,24 @@
     <RowConstraints minHeight="10.0" percentHeight="20.0" prefHeight="30.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <MFXScrollPane id="scroll-pane" fx:id="viewScrollPane" fitToWidth="true" hbarPolicy="NEVER" pannable="true" prefHeight="400.0" prefWidth="1400.0" GridPane.columnSpan="2" GridPane.rowSpan="3">
-         <content>
-            <VBox fx:id="textVbox" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="1380.0" />
-         </content>
-         <GridPane.margin>
-            <Insets top="125.0" />
-         </GridPane.margin>
-      </MFXScrollPane>
-      <HBox id="actions-hbox" prefHeight="100.0" prefWidth="1800.0" GridPane.columnSpan="2" GridPane.rowIndex="3">
+      <TextArea fx:id="textArea" prefWidth="1200.0" GridPane.columnSpan="2" GridPane.rowSpan="4" />
+      <VBox id="scroll-vbox" GridPane.columnIndex="2" GridPane.rowSpan="4" GridPane.valignment="CENTER">
          <children>
-            <MFXButton id="action-button" fx:id="startButton" text="Start" />
-            <MFXButton id="action-button" fx:id="pauseResumeButton" layoutX="10.0" layoutY="10.0" text="Pause" />
-            <MFXButton id="action-button" fx:id="stopButton" layoutX="837.0" layoutY="83.0" text="Stop" />
-         </children>
-      </HBox>
-      <HBox id="input-hbox" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="CENTER">
-         <GridPane.margin>
-            <Insets right="100.0" />
-         </GridPane.margin>
-         <children>
+            <HBox styleClass="hbox">
+               <children>
+                  <MFXButton id="scroll-button" fx:id="upButton" text="↑" />
+                  <MFXButton id="scroll-button" fx:id="downButton" text="↓" />
+               </children>
+            </HBox>
+            <FlowPane id="flow-pane" prefHeight="200.0" prefWidth="200.0">
+               <children>
+                  <MFXButton id="startButton" fx:id="startButton" styleClass="action-button" text="Start" />
+                  <MFXButton id="pauseResumeButton" fx:id="pauseResumeButton" styleClass="action-button" text="Pause" />
+                  <MFXButton id="stopButton" fx:id="stopButton" styleClass="action-button" text="Stop" />
+               </children>
+            </FlowPane>
             <Label id="progress-label" fx:id="progressLabel" />
-            <MFXComboBox id="input-combo-box" fx:id="inputComboBox" floatMode="BORDER" text="Select Input" />
          </children>
-      </HBox>
-      <MFXButton text="Settings" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.valignment="TOP">
-         <GridPane.margin>
-            <Insets right="100.0" top="40.0" />
-         </GridPane.margin>
-      </MFXButton>
+      </VBox>
    </children>
 </GridPane>

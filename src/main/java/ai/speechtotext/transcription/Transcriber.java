@@ -81,7 +81,9 @@ public class Transcriber {
                     var recognizedText = new JSONObject(recognizer.getResult());
                     var text = recognizedText.optString("text", "");
                     if (!text.isEmpty()) {
+                        text = text.replace(" <unk> ", "");
                         text = text.replace("<unk> ", "");
+                        text = text.replace(" <unk>", "");
                         
                         // Compute start/end timestamps in seconds
                         double durationSeconds = (double) bytesRead / (sampleRate * bytesPerSample * channels);
