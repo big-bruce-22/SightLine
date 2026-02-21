@@ -80,7 +80,7 @@ public class InterfaceController implements Initializable {
 
     private TranscriptionChannel<LineTranscription> transcriptionChannel = new TranscriptionChannel<>();
 
-    private InputMethod method = InputMethod.AUDIO_FILE;
+    private InputMethod method = InputMethod.MICROPHONE;
 
     private final boolean debugMode = true;
 

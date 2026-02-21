@@ -84,6 +84,7 @@ public class Transcriber {
                         text = text.replace(" <unk> ", "");
                         text = text.replace("<unk> ", "");
                         text = text.replace(" <unk>", "");
+                        text = text.replace("<unk>", "");
                         
                         // Compute start/end timestamps in seconds
                         double durationSeconds = (double) bytesRead / (sampleRate * bytesPerSample * channels);
