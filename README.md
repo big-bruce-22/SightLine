@@ -32,3 +32,15 @@ Additionally, captions are **stored** and can be converted into **structured not
    ```bash
    git clone https://github.com/big-bruce-22/sightline.git
    cd sightline
+
+2. **Download the Vosk Tagalog model**:  
+   - Visit [Vosk Models](https://alphacephei.com/vosk/models)  
+   - Locate the Tagalog model (`vosk-model-tl-ph-generic-0.6`)  
+   - Extract it into the `/models/` directory in the repo and rename the folder to `tl`  
+
+3. **Run the program**:  
+   Run the JavaFX application with:
+
+   ```bash
+   mvn javafx:run
+> **Note:** Make sure your microphone is connected and the Tagalog Vosk model is correctly placed in /models/ before running the app.
